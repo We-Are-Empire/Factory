@@ -27,9 +27,17 @@
 import Foundation
 
 #if canImport(SwiftUI)
-import Combine
-import Observation
 import SwiftUI
+#endif
+#if canImport(Observation)
+import Observation
+#endif
+// `Combine` is not present on Skip-Fuse Android (where SkipFuseUI
+// provides the SwiftUI surface). Gate it independently so only the
+// Combine-dependent `InjectedObject` wrapper is excluded on Android;
+// the rest of the file (including `@InjectedObservable`) still compiles.
+#if canImport(Combine)
+import Combine
 #endif
 
 /// Convenience property wrapper takes a factory and resolves an instance of the desired type.
@@ -421,6 +429,12 @@ extension InjectedType: @unchecked Sendable where T: Sendable {}
 ///     }
 /// }
 /// ```
+// `@InjectedObject` depends on Combine's `ObservableObject` protocol,
+// which doesn't exist on Skip-Fuse Android. Gated `#if canImport(Combine)`
+// so it remains available on Apple platforms but compiles out on Android.
+// Use `@InjectedObservable` for Observation-based dependencies — that
+// works cross-platform.
+#if canImport(Combine)
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 @MainActor @frozen @propertyWrapper public struct InjectedObject<T>: DynamicProperty where T: Combine.ObservableObject {
     @StateObject fileprivate var dependency: T
@@ -454,6 +468,7 @@ extension InjectedObject {
         self._dependency = StateObject<T>(wrappedValue: wrappedValue)
     }
 }
+#endif
 
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 extension InjectedObject: @unchecked Sendable where T: Sendable {}
