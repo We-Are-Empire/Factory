@@ -468,10 +468,9 @@ extension InjectedObject {
         self._dependency = StateObject<T>(wrappedValue: wrappedValue)
     }
 }
-#endif
-
 @available(iOS 14.0, macOS 11.0, tvOS 14.0, watchOS 7.0, *)
 extension InjectedObject: @unchecked Sendable where T: Sendable {}
+#endif
 
 /// A property wrapper that injects an Observable dependency into a SwiftUI view.
 ///
